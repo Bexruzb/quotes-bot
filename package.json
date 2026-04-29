@@ -1,12 +1,12 @@
 {
   "name": "quote-bot",
-  "version": "5.0.0",
-  "description": "Professional 3D Quote Bot by Yoldoshev",
+  "version": "7.0.0",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
   "dependencies": {
-    "telegraf": "^4.15.0"
+    "telegraf": "^4.15.0",
+    "axios": "^1.7.0"
   }
 }
