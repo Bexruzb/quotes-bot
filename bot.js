@@ -1,6 +1,7 @@
 const { Telegraf } = require('telegraf');
-const puppeteer = require('puppeteer');
+const { createCanvas } = require('canvas');
 const fs = require('fs');
+const path = require('path');
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '8364302087:AAGWaVsPbebwo6A_012SscCKvHNa5AT1Zjo';
 const bot = new Telegraf(BOT_TOKEN);
@@ -16,110 +17,155 @@ const quotes = [
     { text: "Har bir mutaxassis bir paytlar yangi boshlovchi bo'lgan.", author: "Helen Hayes" },
 ];
 
-// 3D Video yaratish funksiyasi
+// 3D Quote Rasm yaratish (Canvas orqali)
 async function create3DQuoteImage(quoteText, quoteAuthor) {
-    const browser = await puppeteer.launch({
-        headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    const width = 1080;
+    const height = 1920;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Orqa fon gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#0a0a14');
+    bgGrad.addColorStop(0.5, '#12122a');
+    bgGrad.addColorStop(1, '#0d0d20');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Yorug'lik effektlari
+    const glow1 = ctx.createRadialGradient(300, 400, 0, 300, 400, 600);
+    glow1.addColorStop(0, 'rgba(100, 160, 255, 0.2)');
+    glow1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glow1;
+    ctx.fillRect(0, 0, width, height);
+
+    const glow2 = ctx.createRadialGradient(750, 1000, 0, 750, 1000, 500);
+    glow2.addColorStop(0, 'rgba(180, 130, 255, 0.15)');
+    glow2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 0, width, height);
+
+    // Glassmorphism karta
+    const cardX = 140;
+    const cardY = 600;
+    const cardW = 800;
+    const cardH = 600;
+
+    // Karta soyasi
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 50;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 20;
+
+    // Karta fon
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+    ctx.fill();
+
+    // Soya o'chirish
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Karta chegarasi
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+    ctx.stroke();
+
+    // Quote matni
+    ctx.fillStyle = '#f0e6d3';
+    ctx.font = 'italic 42px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Matnni qatorlarga bo'lish
+    const words = quoteText.split(' ');
+    const lines = [];
+    let currentLine = '';
+    const maxWidth = cardW - 80;
+
+    for (const word of words) {
+        const testLine = currentLine + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && currentLine !== '') {
+            lines.push(currentLine.trim());
+            currentLine = word + ' ';
+        } else {
+            currentLine = testLine;
+        }
+    }
+    lines.push(currentLine.trim());
+
+    // Matnni chizish
+    ctx.fillStyle = '#f0e6d3';
+    const lineHeight = 60;
+    const startY = cardY + cardH / 2 - (lines.length - 1) * lineHeight / 2;
+
+    lines.forEach((line, i) => {
+        ctx.fillText(line, width / 2, startY + i * lineHeight);
     });
-    
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1080, height: 1920 });
-    
-    const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                width: 1080px;
-                height: 1920px;
-                overflow: hidden;
-                background: #0a0a14;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-family: 'Georgia', serif;
-            }
-            .bg {
-                position: fixed;
-                inset: 0;
-                background: 
-                    radial-gradient(circle at 30% 25%, rgba(100,160,255,0.25) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 60%, rgba(180,130,255,0.2) 0%, transparent 45%),
-                    linear-gradient(180deg, #0a0a14 0%, #12122a 50%, #0d0d20 100%);
-            }
-            .card {
-                position: relative;
-                background: rgba(255,255,255,0.05);
-                backdrop-filter: blur(35px);
-                border: 1px solid rgba(255,255,255,0.15);
-                border-radius: 28px;
-                padding: 50px 40px;
-                max-width: 700px;
-                text-align: center;
-                box-shadow: 0 30px 70px rgba(0,0,0,0.5);
-            }
-            .quote {
-                font-size: 42px;
-                color: #f0e6d3;
-                line-height: 1.5;
-                font-style: italic;
-                margin-bottom: 20px;
-            }
-            .divider {
-                width: 60px;
-                height: 1.5px;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-                margin: 0 auto 16px;
-            }
-            .author {
-                font-size: 24px;
-                color: #fbbf24;
-            }
-            .watermark {
-                font-size: 18px;
-                color: rgba(255,255,255,0.2);
-                margin-top: 30px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="bg"></div>
-        <div class="card">
-            <p class="quote">"${quoteText}"</p>
-            <div class="divider"></div>
-            <p class="author">— ${quoteAuthor}</p>
-            <p class="watermark">@abdu1aziz_571</p>
-        </div>
-    </body>
-    </html>
-    `;
-    
-    await page.setContent(html);
-    await page.waitForTimeout(500);
-    
-    const outputPath = `/tmp/quote_${Date.now()}.png`;
-    await page.screenshot({ path: outputPath, type: 'png' });
-    
-    await browser.close();
+
+    // Ajratuvchi chiziq
+    const dividerY = startY + lines.length * lineHeight + 20;
+    const dividerGrad = ctx.createLinearGradient(width / 2 - 60, 0, width / 2 + 60, 0);
+    dividerGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    dividerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+    dividerGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = dividerGrad;
+    ctx.fillRect(width / 2 - 60, dividerY, 120, 1.5);
+
+    // Muallif
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'italic 28px Georgia, serif';
+    ctx.fillText(`— ${quoteAuthor}`, width / 2, dividerY + 50);
+
+    // Watermark
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.font = '20px Georgia, serif';
+    ctx.fillText('@abdu1aziz_571', width / 2, cardY + cardH - 40);
+
+    // Yuqori sarlavha
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = '18px Georgia, serif';
+    ctx.letterSpacing = '3px';
+    ctx.fillText('✦ DAILY MOTIVATION ✦', width / 2, cardY - 40);
+
+    // Rasmni saqlash
+    const outputPath = path.join('/tmp', `quote_${Date.now()}.png`);
+    const buffer = canvas.toBuffer('image/png');
+    fs.writeFileSync(outputPath, buffer);
+
     return outputPath;
+}
+
+// roundRect yordamchi funksiyasi
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
 }
 
 // /start
 bot.start((ctx) => {
-    ctx.reply(`✨ Assalomu alaykum, ${ctx.from.first_name}!\n\nMen 3D motivatsion quote'lar botiman.\n\nBuyruqlar:\n/quote — Oddiy quote\n/quote3d — 3D quote (rasm)\n/daily — Kunlik obuna\n/help — Yordam`);
+    ctx.reply(`✨ Assalomu alaykum, ${ctx.from.first_name}!\n\nMen 3D motivatsion quote'lar botiman.\n\nBuyruqlar:\n/quote — Oddiy quote\n/quote3d — 3D quote rasm\n/daily — Kunlik obuna\n/help — Yordam`);
 });
 
-// /quote — Oddiy matn
+// /quote
 bot.command('quote', (ctx) => {
     const q = quotes[Math.floor(Math.random() * quotes.length)];
     ctx.reply(`✨ *"${q.text}"*\n\n— ${q.author}`, { parse_mode: 'Markdown' });
 });
 
-// /quote3d — 3D rasm
+// /quote3d
 bot.command('quote3d', async (ctx) => {
     const q = quotes[Math.floor(Math.random() * quotes.length)];
     
@@ -128,8 +174,7 @@ bot.command('quote3d', async (ctx) => {
     try {
         const imagePath = await create3DQuoteImage(q.text, q.author);
         await ctx.replyWithPhoto({ source: imagePath });
-        await ctx.reply(`✨ *"${q.text}"*\n\n— ${q.author}`, { parse_mode: 'Markdown' });
-        fs.unlinkSync(imagePath); // Rasmni o'chirish
+        fs.unlinkSync(imagePath);
     } catch (err) {
         console.error('Xatolik:', err);
         ctx.reply('❌ Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
@@ -148,7 +193,7 @@ bot.command('daily', (ctx) => {
 
 // /help
 bot.help((ctx) => {
-    ctx.reply(`📋 *Yordam:*\n\n/quote — Oddiy quote\n/quote3d — 3D quote rasm\n/daily — Kunlik obuna\n/help — Yordam\n\n💎 *@abdu1aziz_571*`, { parse_mode: 'Markdown' });
+    ctx.reply(`📋 *Yordam:*\n\n/quote — Oddiy quote\n/quote3d — 3D quote rasm\n/daily — Kunlik obuna\n/help — Yordam\n\n💎 *@yoldoshev_2*`, { parse_mode: 'Markdown' });
 });
 
 bot.launch();
