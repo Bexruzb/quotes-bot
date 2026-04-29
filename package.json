@@ -1,7 +1,7 @@
 {
   "name": "quote-bot",
-  "version": "3.0.0",
-  "description": "3D Quote Generator Bot",
+  "version": "5.0.0",
+  "description": "Professional 3D Quote Bot by Yoldoshev",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
