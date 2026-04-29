@@ -1,13 +1,13 @@
 {
   "name": "quote-bot",
-  "version": "1.0.0",
-  "description": "Telegram Quote Generator Bot",
+  "version": "2.0.0",
+  "description": "3D Quote Generator Bot",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
   "dependencies": {
     "telegraf": "^4.15.0",
-    "node-fetch": "^2.7.0"
+    "puppeteer": "^22.0.0"
   }
 }
