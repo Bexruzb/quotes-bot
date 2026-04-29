@@ -75,7 +75,7 @@ function createQuoteSVG(quoteText, quoteAuthor, emoji) {
         <!-- Watermark -->
         <text x="540" y="1140" text-anchor="middle" fill="rgba(255,255,255,0.25)" 
               font-family="Georgia, serif" font-size="18">
-            @abdu1aziz_571
+            @yoldoshev_2
         </text>
     </svg>`;
     
@@ -99,7 +99,7 @@ bot.start((ctx) => {
         `/quote3d — 3D quote rasm\n` +
         `/daily — Kunlik obuna\n` +
         `/help — Yordam\n\n` +
-        `💎 @abdu1aziz_571`,
+        `*@yoldoshev_2*`,
         { parse_mode: 'Markdown' }
     );
 });
@@ -135,7 +135,7 @@ bot.command('quote3d', async (ctx) => {
         console.error('Xatolik:', err.message);
         
         // Xatolik bo'lsa, oddiy matn yuborish
-        ctx.reply(`${q.emoji} *"${q.text}"*\n\n— ${q.author}\n\n💎 @yoldoshev_2`, { parse_mode: 'Markdown' });
+        ctx.reply(`${q.emoji} *"${q.text}"*\n\n— ${q.author}\n\n💎 `@yoldoshev_2`, { parse_mode: 'Markdown' });
     }
 });
 
@@ -157,7 +157,7 @@ bot.help((ctx) => {
         `/quote3d — 3D quote rasm\n` +
         `/daily — Kunlik obuna\n` +
         `/help — Yordam\n\n` +
-        `💎 *@abdu1aziz_571*`,
+        `*@yoldoshev_2*`,
         { parse_mode: 'Markdown' }
     );
 });
